@@ -1,22 +1,25 @@
 import React, {Component} from 'react'
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import {weaponNameMap} from "../static/weaponNameMap";
-import {weaponTypeMap} from "../static/weaponTypeMap";
 import {mapMap} from "../static/mapMap";
 import WeaponChartComponent from "../components/weaponKillChartComponent";
 import MatchListComponent from "../components/matchListComponent";
 import {getMatch} from "../actions";
 import {connect} from "react-redux";
+import {weaponNameMap} from "../static/weaponNameMap";
+import {weaponTypeMap} from "../static/weaponTypeMap";
+
 
 class PlayerContainer extends Component {
 
     serviceUrl = '';
-    state = { player: null, loaded: true, matchIds: [], teammates: [], matchCount: 0, timeSurvived: 0, topCount: 0, loadedMatchCount:0, loadedAdvancedMatchCount: 0, matches: [], weapons: [], weaponTypes: [], loadedMatches: false, matchList: []};
+    state = { player: null, loaded: true, offenseScore: 0, matchIds: [], teammates: [], matchCount: 0, timeSurvived: 0,
+        topCount: 0, loadedMatchCount:0, loadedAdvancedMatchCount: 0, matches: [], weapons: [], weaponTypes: [],
+        loadedMatches: false, matchList: [], loadedMatchIds: []};
 
-    damageCausers = [];
-    damageCauserAmounts = [];
-    damageCauserCounts = [];
+    // damageCausers = [];
+    // damageCauserAmounts = [];
+    // damageCauserCounts = [];
     damageCauserTypes = [];
     damageCauserTypeAmounts = [];
     damageCauserTypeCounts = [];
@@ -66,13 +69,10 @@ class PlayerContainer extends Component {
 
             this.setState({player: player, matchCount: matches.length, matchIds: matches.map(match => match.id)});
 
-            // matches = matches.slice(0, 10);
-
             console.log(`match count is ${matches.length}`);
 
             matches.forEach(match => {
                 this.props.fetchMatch(match.id);
-                // this.retrieveMatch(match.id);
             });
         } else {
             console.error('the player was not found');
@@ -83,7 +83,7 @@ class PlayerContainer extends Component {
 
         // console.log('render');
 
-        let progressDom =  <div className={`container`}>
+        let progressDom =  <div className={``}>
             <div className="progress">
                 <div className="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
                      aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style={{width: ''+Math.floor((100*(this.state.loadedAdvancedMatchCount / this.state.matches.length))) + '%'}}></div>
@@ -99,58 +99,28 @@ class PlayerContainer extends Component {
 
 
         if (this.state.loaded) {
-            statDom = <div className={`container-xl stats p-relative`}>
-                <div className={`background`}></div>
-                {(showAverages) && <div className={`row`}>
-                    <div className={`col-4 text-left`}>
-                        {this.props.username}<span className={`game-count`}>({(this.state.deathCount + this.state.winCount)} games)</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{Math.round(10*(this.state.killCount / (this.state.deathCount + this.state.winCount)))/10}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{Math.round(10*((this.state.totalDamage) / (this.state.deathCount + this.state.winCount)))/10}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{Math.round(10 * 100*(this.state.topCount / (this.state.deathCount + this.state.winCount)))/10}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{Math.round(10 * 100*(this.state.winCount / (this.state.deathCount + this.state.winCount)))/10}</span>
-                    </div>
-                </div>}
-                {(!showAverages) && <div className={`row`}>
-                    <div className={`col-4 text-left`}>
-                        {this.props.username}<span className={`game-count`}>({(this.state.deathCount + this.state.winCount)} games)</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{this.state.killCount}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{this.state.totalDamage}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{this.state.topCount}</span>
-                    </div>
-                    <div className={`col-1`}>
-                        <span className={`font-weight-bold`}>{this.state.winCount}</span>
-                    </div>
-                </div>}
+            statDom = <div className={`stats`}>
+                <div></div>
+                {(showAverages) && <averageData state={this.state}/>}
+                {(!showAverages) && <totalData state={this.state}/>}
             </div>;
         }
 
 
-        let matchDom = <div className={`container matches mb-4`}>
+        let matchDom = <div className={`matches mb-4`}>
             <MatchListComponent matches={this.state.matchList}/>
         </div>;
 
-        matchDom = <div></div>;
-
+        let showMatches = this.getRequestParam('matches') === '1';
+        if(!showMatches){
+            matchDom = <div></div>;
+        }
 
         let dom = <div></div>; // progressDom;
 
 
-
-        if(this.state.weaponTypes.length > 0){
+        let showCharts= this.getRequestParam('charts') === '1';
+        if(this.state.weaponTypes.length > 0 && showCharts){
             dom = <div>
                 {statDom}
                 <div className={`container`}>
@@ -165,7 +135,7 @@ class PlayerContainer extends Component {
                                 <h3 className={`text-center text-uppercase`}>Stats by weapon type</h3>
                                 <div className={`row mb-4`}>
                                     <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weaponTypes} property={'kills'}/>}
+                                        {<WeaponChartComponent weapons={this.state.weaponTypes} property={'kos'}/>}
 
                                     </div>
                                     <div className={`col-12 col-md-6`}>
@@ -177,7 +147,7 @@ class PlayerContainer extends Component {
                                 <h3 className={`text-center text-uppercase`}>Stats by weapon</h3>
                                 <div className={`row mb-4`}>
                                     <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weapons} property={'kills'}/>}
+                                        {<WeaponChartComponent weapons={this.state.weapons} property={'kos'}/>}
 
                                     </div>
                                     <div className={`col-12 col-md-6`}>
@@ -193,7 +163,7 @@ class PlayerContainer extends Component {
         } else if(this.state.loadedMatches){
             dom = <div>
                 {statDom}
-                {/*progressDom*/}
+                {progressDom}
                 {matchDom}
             </div>
         }
@@ -220,41 +190,6 @@ class PlayerContainer extends Component {
         this.tabContentRef.current.children.item(selectedIndex).classList.add("active");
         return false;
     }
-
-    /**
-    retrieveMatch(matchId){
-        axios.get(this.serviceUrl + '/matches/' + matchId)
-            .then(res => {
-            let match = res.data;
-            let matchTime = new Date(match.data.attributes.createdAt);
-            this.state.loadedMatchCount++;
-            if(this.matchesDateFilter(matchTime) && this.matchesTypeFilter(match.data.attributes.gameMode) && this.matchesMapFilter(match.data.attributes.mapName)){
-                this.state.matches.push(match);
-
-                this.state.matches.sort( function (a, b) {
-                    return new Date(b.data.attributes.createdAt).getTime() - new Date(a.data.attributes.createdAt).getTime();
-                } );
-                window.localStorage.setItem('matches', JSON.stringify(this.state.storedMatches));
-
-
-
-                // console.log(match);
-                // this.retrieveAdvancedMatchData(match);
-            } else {
-                // skipping this match because it was not today
-            }
-
-
-                this.setState({matches: this.state.matches, loadedMatchCount: this.state.loadedMatchCount});
-
-                if(this.state.loadedMatchCount === this.state.matchCount){
-                    // console.log(this.state.matches);
-                    this.processMatches();
-                }
-
-        }).catch(error => {console.error(error);});
-    }
-    **/
 
 
     getRequestParam(name){
@@ -297,16 +232,12 @@ class PlayerContainer extends Component {
 
     processMatches() {
 
-        // console.log('process matches');
+        console.log('process matches');
 
-        const _self = this;
+        let matchArray = this.state.matchList;
 
-        const matchArray = [];
-
-        const killArray = [];
         const reviveArray = [];
         const timeSurvivedArray = [];
-        let damageArray = [];
 
         const add = (a, b) =>
             a + b;
@@ -315,22 +246,31 @@ class PlayerContainer extends Component {
 
         myMatches.forEach(match => {
 
-            let matchTime = new Date(match.data.attributes.createdAt);
-            if(this.matchesDateFilter(matchTime) && this.matchesTypeFilter(match.data.attributes.gameMode) && this.matchesMapFilter(match.data.attributes.mapName)) {
-                // continue processing
-            } else {
+            console.log(this.state.matchList);
+
+            if(this.state.loadedMatchIds.indexOf(match.data.id) > -1){
                 return;
             }
+
+            const telemetryData = this.getMyTelemetryData(match);
+
+            const advancedMetrics = this.getAdvancedMetrics(telemetryData);
 
             match.included.forEach(item =>
                 {
                     if (item.type === 'participant') {
-                        if (item.attributes.stats.playerId === _self.state.player.id) {
+                        if (item.attributes.stats.playerId === this.state.player.id) {
 
                             const stats = item.attributes.stats;
+
+                            match.winPlace = stats.winPlace;
+                            timeSurvivedArray.push(stats.timeSurvived);
+
+                            // todo: reconsider this (for now summary data includes bots)
+                            /**
                             // console.log(item.attributes.stats);
                             match.kills = stats.kills;
-                            match.winPlace = stats.winPlace;
+
                             match.damageDealt = stats.damageDealt;
                             match.dbnos = stats.DBNOs;
                             match.revives = stats.revives;
@@ -340,36 +280,86 @@ class PlayerContainer extends Component {
                             // console.log(`kills: ${match.kills}`);
                             // console.log(`damage dealt: ${match.damageDealt}`);
                             reviveArray.push(stats.revives);
-                            killArray.push(stats.kills);
+                            // killArray.push(stats.kills);
+                            killArray.push(telemetryData.humanKillEvents.length);
                             damageArray.push(stats.damageDealt);
-                            timeSurvivedArray.push(stats.timeSurvived);
+                             **/
                         }
                     }
                 }
             );
 
-
-
             matchArray.push( {'overallPoints': match.overallPoints, mapName: mapMap[match.data.attributes.mapName],
-                'gameMode': match.data.attributes.gameMode, 'damageDealt': match.damageDealt, 'kills': match.kills,
+                'gameMode': match.data.attributes.gameMode, 'damageDealt': match.damageDealt,
+                'humanKills': telemetryData.humanKillEvents.length, 'botKills': telemetryData.botKillEvents.length,
+                'humanKnocks': telemetryData.humanKnockEvents.length, 'botKnocks': telemetryData.botKnockEvents.length,
                 'winPlace': match.winPlace, 'killPoints': match.killPoints, 'winPoints': match.winPoints,
-                'timeSurvived': match.timeSurvived,
+                'timeSurvived': match.timeSurvived, 'advancedMetrics': advancedMetrics,
                 'date': new Date(match['data']['attributes']['createdAt']), 'revives': match.revives, 'id': match['data']['id']} );
         });
 
+        if(matchArray.length > 1){
+            matchArray = matchArray.sort( (a,b) => b.date - a.date)
+        }
 
+        // total advanced metrics
+        let tAM = {
+            damageCausers: [],
+            damageCauserAmounts: [],
+            damageCauserCounts: [],
+            damageCauserTypes: [],
+            damageCauserTypeAmounts: [],
+            damageCauserTypeCounts: []
+        };
+
+        matchArray.forEach(match => {
+            let metrics = match.advancedMetrics;
+            metrics.damageCausers.forEach((damageCauser, index) => {
+                if(tAM.damageCausers.indexOf(damageCauser) === -1){
+                    tAM.damageCausers.push(damageCauser);
+                    tAM.damageCauserCounts.push(0);
+                    tAM.damageCauserAmounts.push(0);
+                }
+                const weaponIndex = tAM.damageCausers.indexOf(damageCauser);
+                const amount = metrics.damageCauserAmounts[index];
+                const count = metrics.damageCauserCounts[index];
+                tAM.damageCauserCounts[weaponIndex] += count;
+                tAM.damageCauserAmounts[weaponIndex] += amount;
+            });
+            metrics.damageCauserTypes.forEach((damageCauserType, index) => {
+                if(tAM.damageCauserTypes.indexOf(damageCauserType) === -1){
+                    tAM.damageCauserTypes.push(damageCauserType);
+                    tAM.damageCauserTypeCounts.push(0);
+                    tAM.damageCauserTypeAmounts.push(0);
+                }
+                const weaponTypeIndex = tAM.damageCauserTypes.indexOf(damageCauserType);
+                const amount = metrics.damageCauserTypeAmounts[index];
+                const count = metrics.damageCauserTypeCounts[index];
+
+                tAM.damageCauserTypeCounts[weaponTypeIndex] += count;
+                tAM.damageCauserTypeAmounts[weaponTypeIndex] += amount;
+            })
+        });
+
+        // todo: aggregate advanced metrics from matchArray
+        this.updateWeaponsAndWeaponTypes(tAM);
 
         const winCount = matchArray.filter(match => match.winPlace === 1).length;
         const topCount = matchArray.filter(match => match.winPlace <= 5).length;
+        const totalRevives = reviveArray.reduce(add,0);
+        const totalTimeSurvived = timeSurvivedArray.reduce(add,0);
 
-        const deathCount = matchArray.filter(match => match.winPlace > 1).length;
+        // const deathCount = matchArray.filter(match => match.winPlace > 1).length;
 
-        let totalKills = killArray.reduce(add,0);
-        let totalDamage = damageArray.reduce(add,0);
-        let totalRevives = reviveArray.reduce(add,0);
-        let totalTimeSurvived = timeSurvivedArray.reduce(add,0);
+        const totalKos = tAM.damageCauserCounts.reduce(add,0);
+        const totalDamage = tAM.damageCauserAmounts.reduce(add,0);
+        const offenseScore = ((totalKos * 100) + totalDamage)/2;
 
-        this.setState({matchList: matchArray, reviveCount: totalRevives, killCount: totalKills,totalDamage: totalDamage,winCount: winCount,  topCount: topCount, timeSurvived: totalTimeSurvived, deathCount: deathCount, loadedMatches: true});
+        const loadedMatchIds = matchArray.map(match => match.id);
+
+        this.setState({matchList: matchArray, offenseScore: offenseScore, matchCount: matchArray.length,
+            reviveCount: totalRevives, totalKos: totalKos,totalDamage: totalDamage,winCount: winCount,  topCount: topCount,
+            timeSurvived: totalTimeSurvived, loadedMatches: true, loadedMatchIds: loadedMatchIds});
     }
 
     getMyMatches(){
@@ -380,6 +370,129 @@ class PlayerContainer extends Component {
         // console.log(`my match count is ${myMatches.length}`);
         // console.log(this.state.matchIds);
         return myMatches;
+    }
+
+    getMyTelemetryData(match){
+        const accountId = this.state.player.id;
+
+        let knockEvents = match.telemetryData.knockEvents;
+        knockEvents = knockEvents.filter(event => event.attacker && event.attacker.accountId === accountId);
+        knockEvents = knockEvents.filter(event => event.attacker && event.victim && event.attacker.teamId != event.victim.teamId);
+        let humanKnockEvents = knockEvents.filter(event => event.victim.accountId.indexOf('ai.') === -1);
+        let botKnockEvents = knockEvents.filter(event => event.victim.accountId.indexOf('ai.') === 0);
+
+        let killEvents = match.telemetryData.killEvents;
+        killEvents = killEvents.filter(event => event.killer && event.killer.accountId === accountId);
+        killEvents = killEvents.filter(event => event.killer && event.victim && event.killer.teamId != event.victim.teamId);
+        let humanKillEvents = killEvents.filter(event => event.victim.accountId.indexOf('ai.') === -1);
+        let botKillEvents = killEvents.filter(event => event.victim.accountId.indexOf('ai.') === 0);
+
+        let instaKills = killEvents.filter(event => event.dBNOId === -1);
+        let humanInstaKills = instaKills.filter(event => event.victim.accountId.indexOf('ai.') === -1);
+        let botInstaKills = instaKills.filter(event => event.victim.accountId.indexOf('ai.') === 0);
+        let killedHumanVictims = [];
+        let killedBotVictims = [];
+        instaKills.forEach(event => {
+            // console.log(event.victim.accountId);
+            const victimId = event.victim.accountId;
+            if(victimId.indexOf('ai.') === 0) {
+                // is bot
+                if(killedBotVictims.indexOf(victimId) === -1) {
+                    killedBotVictims.push(victimId);
+                }
+            } else {
+                // is human
+                if(killedHumanVictims.indexOf(victimId) === -1) {
+                    killedHumanVictims.push(victimId);
+                }
+            }
+
+        });
+
+
+        let attackEvents = match.telemetryData.attackEvents;
+        // remove team kills
+        attackEvents = attackEvents.filter(event => event.attacker && event.victim && event.attacker.teamId != event.victim.teamId);
+        let attackedEvents = attackEvents.filter(event => event.victim && event.victim.accountId === accountId);
+        attackEvents = attackEvents.filter(event => event.attacker && event.attacker.accountId === accountId);
+        // attackEvents = attackEvents.filter(event => event.damage > 0);
+
+        let humanAttackEvents = attackEvents.filter(event => !this.isBot(event.victim.accountId));
+        let botAttackEvents = attackEvents.filter(event => this.isBot(event.victim.accountId));
+
+
+        let uniqueHumanKnocks = [];
+        let uniqueBotKnocks = [];
+        let knockedVictims = knockEvents.map(event => event.victim.accountId);
+        const knockedBots = []; //knockedVictims.filter(id => id.indexOf('ai.') === 0);
+        const knockedHumans = []; //knockedVictims.filter(id => id.indexOf('ai.') === -1);
+        const botKnocks = knockEvents.filter(event => this.isBot(event.victim.accountId));
+        const humanKnocks = knockEvents.filter(event => !this.isBot(event.victim.accountId));
+        knockEvents.forEach(event => {
+            const victimId = event.victim.accountId;
+            if(victimId.indexOf('ai.') === 0){
+                // is bot
+                if(knockedBots.indexOf(victimId) === -1){
+                    knockedBots.push(victimId)
+                    uniqueBotKnocks.push(event);
+                }
+            } else {
+                // is human
+                if(knockedHumans.indexOf(victimId) === -1){
+                    knockedHumans.push(victimId)
+                    uniqueHumanKnocks.push(event);
+                }
+            }
+
+
+        });
+        knockEvents = uniqueHumanKnocks;
+
+
+        let uniqueHumanVictims = knockedHumans;
+        let uniqueBotVictims = knockedBots;
+        killedHumanVictims.forEach(victimId => {
+            if(victimId.indexOf('ai.') === 0){
+                // is bot
+                if(uniqueBotVictims.indexOf(victimId) === -1){
+                    uniqueBotVictims.push(victimId)
+                }
+            } else {
+                // is human
+                if(uniqueHumanVictims.indexOf(victimId) === -1){
+                    uniqueHumanVictims.push(victimId)
+                }
+            }
+        });
+
+        let bots = uniqueBotVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === 0);
+        let humans = uniqueHumanVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === -1);
+
+        console.log(`bots: ${bots.length} humans: ${humans.length}`);
+
+
+        let assistEvents = match.telemetryData.killEvents;
+        assistEvents = assistEvents.filter(event => event.assistant && event.killer && event.assistant.accountId != event.killer.accountId && event.assistant.accountId === accountId);
+
+        let deathEvents = match.telemetryData.killEvents;
+        deathEvents = deathEvents.filter(event => event.victim && event.victim.accountId === accountId);
+
+        return {
+            humanAttackEvents: humanAttackEvents,
+            botAttackEvents: botAttackEvents,
+            humanKnockEvents: humanKnockEvents,
+            botKnockEvents: botKnockEvents,
+            humanKillEvents: humanKillEvents,
+            botKillEvents: botKillEvents,
+            deathEvents: deathEvents,
+            assistEvents: assistEvents,
+            botInstaKills: botInstaKills,
+            humanInstaKills: humanInstaKills
+        };
+    }
+
+    isBot(accountId){
+        return accountId.indexOf('ai.') === 0;
     }
 
     parseTelemetryData(r) {
@@ -545,6 +658,236 @@ class PlayerContainer extends Component {
             'killEvents': killEvents, 'knockEvents': knockEvents, 'deathEvents': deathEvents, 'attackEvents': attackEvents};
     }
 
+    getAdvancedMetrics(telemetryData) {
+        const victims = [];
+        const downed = [];
+
+        const damageCausers = [];
+        const damageCauserAmounts = [];
+        const damageCauserCounts = [];
+        const damageCauserTypes = [];
+        const damageCauserTypeAmounts = [];
+        const damageCauserTypeCounts = [];
+
+        // todo: maybe support bot events
+        telemetryData.humanAttackEvents.forEach(attackEvent => {
+            if ( victims.indexOf(attackEvent.victim.name) === -1 ) {
+                victims.push(attackEvent.victim.name);
+                /**
+                this.attackCount ++;
+                this.ka = this.killCount / this.attackCount;
+                **/
+            }
+
+            // update weapons
+            const damageCauser = weaponNameMap[attackEvent.damageCauserName];
+
+            if(damageCauser === undefined){
+                alert(attackEvent.damageCauserName);
+            }
+
+            // only include damaging attack events
+            if(attackEvent.damage > 0) {
+                if (damageCausers.indexOf(damageCauser) === -1) {
+                    damageCausers.push(damageCauser);
+
+                    damageCauserAmounts[damageCausers.indexOf(damageCauser)] = 0;
+                    damageCauserCounts[damageCausers.indexOf(damageCauser)] = 0;
+                }
+
+                damageCauserAmounts[damageCausers.indexOf(damageCauser)] += attackEvent.damage;
+
+                // update weapon types
+                const damageCauserType = weaponTypeMap[attackEvent.damageCauserName];
+
+                if (damageCauserTypes.indexOf(damageCauserType) === -1) {
+                    damageCauserTypes.push(damageCauserType);
+
+                    damageCauserTypeAmounts[damageCauserTypes.indexOf(damageCauserType)] = 0;
+                    damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)] = 0;
+                }
+
+                damageCauserTypeAmounts[damageCauserTypes.indexOf(damageCauserType)] += attackEvent.damage;
+            }
+        });
+
+        // todo: maybe support bot events
+        telemetryData.humanKnockEvents.forEach(event => {
+
+            const damageCauser = weaponNameMap[event.damageCauserName];
+            const damageCauserType = weaponTypeMap[event.damageCauserName];
+
+            if(damageCauser === undefined){
+                alert(event.damageCauserName);
+                return;
+            }
+
+            if (damageCausers.indexOf(damageCauser) === -1 || damageCauserTypes.indexOf(damageCauserType) === -1) {
+                // weapon does not match an attacking weapon
+                alert('non attacking weapon');
+                return;
+            }
+
+            damageCauserCounts[damageCausers.indexOf(damageCauser)]++;
+            damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)]++;
+        });
+
+        telemetryData.humanInstaKills.forEach(event => {
+
+            // update weapons
+            const damageCauser = weaponNameMap[event.damageCauserName];
+            const damageCauserType = weaponTypeMap[event.damageCauserName];
+
+            if(damageCauser === undefined){
+                alert(event.damageCauserName);
+            }
+
+            if (damageCausers.indexOf(damageCauser) === -1 || damageCauserTypes.indexOf(damageCauserType) === -1) {
+                // weapon does not match an attacking weapon
+                alert('non attacking weapon');
+                return;
+            }
+
+            damageCauserCounts[damageCausers.indexOf(damageCauser)]++;
+            damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)]++;
+        });
+
+        /**
+
+
+
+        // todo: maybe support bot events
+
+
+        // todo: maybe support bot events
+        telemetryData.humanKillEvents.forEach(event => {
+
+            // update weapons
+            const damageCauser = weaponNameMap[event.damageCauserName];
+
+            if(damageCauser === undefined){
+                alert(event.damageCauserName);
+            }
+
+            if (damageCausers.indexOf(damageCauser) === -1) {
+                damageCausers.push(damageCauser);
+
+                damageCauserCounts[damageCausers.indexOf(damageCauser)] = 0;
+            }
+
+            damageCauserCounts[damageCausers.indexOf(damageCauser)]++;
+
+            // update weapon types
+            const damageCauserType = weaponTypeMap[event.damageCauserName];
+
+            if (damageCauserTypes.indexOf(damageCauserType) === -1) {
+                damageCauserTypes.push(damageCauserType);
+
+                damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)] = 0;
+            }
+
+            damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)]++;
+
+            // this.killCount ++;
+            // this.kd = this.killCount / this.deathCount;
+            // this.ka = this.killCount / this.attackCount;
+
+
+        });
+        **/
+
+        telemetryData.deathEvents.forEach(event => {
+            /**
+            this.deathCount ++;
+            this.kd = this.killCount / this.deathCount;
+             **/
+        });
+
+        /**
+        this.state.loadedAdvancedMatchCount++;
+        // console.log('loaded advanced data for ' + this.state.loadedAdvancedMatchCount + ' matches of ' + this.state.matches.length );
+
+        if(this.state.loadedAdvancedMatchCount === this.state.matches.length){
+            this.setState({weapons: weapons, weaponTypes: weaponTypes, loadedAdvancedMatchCount: this.state.loadedAdvancedMatchCount});
+            console.log('the weapon data is loaded');
+
+
+            const teammateMap = {};
+            this.state.teammates.forEach(teammate => {
+                if(teammateMap[teammate.name] === undefined){
+                    teammateMap[teammate.name] = 1;
+                } else {
+                    teammateMap[teammate.name]++;
+                }
+            });
+
+            let teammateCounts = Object.keys(teammateMap).map(teammate => {return {name: teammate, count: teammateMap[teammate]}});
+            teammateCounts = teammateCounts.sort((a,b) => {return b.count - a.count});
+            console.log(teammateCounts);
+
+
+
+        } else {
+            // console.log('updated advanced metrics');
+        }
+        **/
+        return {
+            damageCausers: damageCausers,
+            damageCauserAmounts: damageCauserAmounts,
+            damageCauserCounts: damageCauserCounts,
+            damageCauserTypes: damageCauserTypes,
+            damageCauserTypeAmounts: damageCauserTypeAmounts,
+            damageCauserTypeCounts: damageCauserTypeCounts
+        };
+
+    }
+
+    updateWeaponsAndWeaponTypes(advancedMetrics){
+        const weapons = [];
+
+        for (let i = 0; i < advancedMetrics.damageCausers.length; i++) {
+            const weapon = {
+                'name': advancedMetrics.damageCausers[i],
+                'kos': advancedMetrics.damageCauserCounts[i],
+                'damage': advancedMetrics.damageCauserAmounts[i]
+            };
+
+            weapons.push(weapon);
+        }
+
+        weapons.sort(function(a, b) {
+            if (a.kills === b.kills) {
+                return b.damage - a.damage;
+            }
+            return b.kills - a.kills;
+        });
+
+        const weaponTypes = [];
+
+        for (let i = 0; i < advancedMetrics.damageCauserTypes.length; i++) {
+            const weaponType = {
+                'name': advancedMetrics.damageCauserTypes[i],
+                'kos': advancedMetrics.damageCauserTypeCounts[i],
+                'damage': advancedMetrics.damageCauserTypeAmounts[i]
+            };
+
+            weaponTypes.push(weaponType);
+        }
+
+        weaponTypes.sort(function(a, b) {
+            if (a.kills === b.kills) {
+                return b.damage - a.damage;
+            }
+            return b.kills - a.kills;
+        });
+
+        this.setState({
+            weapons: weapons,
+            weaponTypes: weaponTypes
+        });
+    }
+
+    /**
     retrieveAdvancedMatchData(match) {
 
         const _self = this;
@@ -721,7 +1064,7 @@ class PlayerContainer extends Component {
 
 
     }
-
+    **/
 }
 
 PlayerContainer.propTypes = {
@@ -732,7 +1075,7 @@ PlayerContainer.propTypes = {
 
 const mapStateToProps = state => {
     return {
-        matches: state.matchReducer.matches.map(item => item.match)
+        matches: state.matchReducer.matchData.matches
     }
 }
 
