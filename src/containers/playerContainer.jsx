@@ -340,46 +340,7 @@ class PlayerContainer extends Component {
         if(matchArray.length > 1){
             matchArray = matchArray.sort( (a,b) => b.date - a.date)
         }
-        /**
-        // total advanced metrics
-        let tAM = {
-            damageCausers: [],
-            damageCauserAmounts: [],
-            damageCauserCounts: [],
-            damageCauserTypes: [],
-            damageCauserTypeAmounts: [],
-            damageCauserTypeCounts: []
-        };
 
-        matchArray.forEach(match => {
-            let metrics = match.advancedMetrics;
-            metrics.damageCausers.forEach((damageCauser, index) => {
-                if(tAM.damageCausers.indexOf(damageCauser) === -1){
-                    tAM.damageCausers.push(damageCauser);
-                    tAM.damageCauserCounts.push(0);
-                    tAM.damageCauserAmounts.push(0);
-                }
-                const weaponIndex = tAM.damageCausers.indexOf(damageCauser);
-                const amount = metrics.damageCauserAmounts[index];
-                const count = metrics.damageCauserCounts[index];
-                tAM.damageCauserCounts[weaponIndex] += count;
-                tAM.damageCauserAmounts[weaponIndex] += amount;
-            });
-            metrics.damageCauserTypes.forEach((damageCauserType, index) => {
-                if(tAM.damageCauserTypes.indexOf(damageCauserType) === -1){
-                    tAM.damageCauserTypes.push(damageCauserType);
-                    tAM.damageCauserTypeCounts.push(0);
-                    tAM.damageCauserTypeAmounts.push(0);
-                }
-                const weaponTypeIndex = tAM.damageCauserTypes.indexOf(damageCauserType);
-                const amount = metrics.damageCauserTypeAmounts[index];
-                const count = metrics.damageCauserTypeCounts[index];
-
-                tAM.damageCauserTypeCounts[weaponTypeIndex] += count;
-                tAM.damageCauserTypeAmounts[weaponTypeIndex] += amount;
-            })
-        });
-        **/
         // todo: aggregate advanced metrics from matchArray
         // const weaponsAndTypes = this.getWeaponsAndWeaponTypes(tAM);
 
@@ -633,88 +594,7 @@ class PlayerContainer extends Component {
                 stateEvents.push(safeZone);
             }
 
-            /**
-             if (telemetryEvent['_T'] === 'LogPlayerPosition') {
-                        if (telemetryEvent['character']['accountId'] === accountId) {
-                            const positionEvent = telemetryEvent['character']['location'];
-                            positionEvent['elapsedTime'] = telemetryEvent['elapsedTime']
-                            positionEvent['datestamp'] = new Date(telemetryEvent['_D'])
-                            if (positionEvent['elapsedTime'] > 0) {
-                                positionEvents.push(positionEvent);
-                                // console.log(telemetryEvent);
-                            }
-                        }
-                    }
-
-
-             if (telemetryEvent['_T'] === 'LogVehicleRide') {
-
-                }
-
-             if (telemetryEvent['_T'] === 'LogVehicleLeave') {
-                    if (telemetryEvent['character']['accountId'] === accountId) {
-                        if (telemetryEvent['vehicle']['vehicleType'] === 'Parachute') {
-                            dropTime = new Date(telemetryEvent['_D']);
-                        }
-                        // console.log(telemetryEvent);
-                    }
-                }
-             **/
-
         });
-
-        /**
-
-        positionEvents.sort(function(a, b) {
-            return a['elapsedTime'] - b['elapsedTime'];
-        });
-
-
-         const filteredPostionEvents = [];
-
-         let afterDrop = false;
-
-         let previousEvent = null;
-         positionEvents.forEach(function(positionEvent) {
-                if (previousEvent) {
-                    const d = Math.sqrt( positionEvent['x'] * positionEvent['x'] + positionEvent['Y'] * positionEvent['y'] );
-                    const t = positionEvent['elapsedTime'] - previousEvent['elapsedTime'];
-                    let s = d / t;
-                    s = s / 100;
-
-                    if (positionEvent['datestamp'] > dropTime) {
-                        afterDrop = true;
-                    }
-
-                    if (afterDrop) {
-                        filteredPostionEvents.push(positionEvent);
-                    }
-
-                }
-                previousEvent = positionEvent;
-            });
-         **/
-
-        /**
-        const filteredStateEvents = [];
-        let previousEvent = null;
-        let radiusChanged = true;
-        stateEvents.forEach(function(stateEvent) {
-            if (previousEvent) {
-                if (previousEvent['safeZone']['radius']
-                    === stateEvent['safeZone']['radius']) {
-                    if (radiusChanged) {
-                        radiusChanged = false;
-                        filteredStateEvents.push(previousEvent);
-                    }
-                } else {
-                    radiusChanged = true;
-                }
-            }
-
-            previousEvent = stateEvent;
-        });
-         **/
 
         return {/*'stateEvents': filteredStateEvents, 'positionEvents': filteredPostionEvents,*/ 'playerEvents': playerEvents,
             'killEvents': killEvents, 'knockEvents': knockEvents, 'deathEvents': deathEvents, 'attackEvents': attackEvents};
