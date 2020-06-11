@@ -141,54 +141,6 @@ class PlayerContainer extends Component {
 
 
         let showCharts= this.getRequestParam('charts') === '1';
-        /**
-        if(this.state.weaponTypes.length > 0 && showCharts){
-            dom = <div>
-                {statDom}
-                <div className={`container`}>
-                    <div className={`col-12`}>
-                        <div className={`font-weight-bold text-uppercase mb-2`}>Stats by:</div>
-                        <ul ref={this.tabRef} className="nav nav-tabs mb-4">
-                            <li className="nav-item"><a className={`nav-link active`} href="#home" onClick={this.selectTab}>Weapon Type</a></li>
-                            <li className={`nav-item`}><a href="#menu1" className={`nav-link`}  onClick={this.selectTab}>Specific Weapon</a></li>
-                        </ul>
-                        <div ref={this.tabContentRef} className="tab-content">
-                            <div id="home" className="tab-pane active">
-                                <h3 className={`text-center text-uppercase`}>Stats by weapon type</h3>
-                                <div className={`row mb-4`}>
-                                    <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weaponTypes} property={'kos'}/>}
-
-                                    </div>
-                                    <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weaponTypes} property={'damage'}/>}
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="menu1" className="tab-pane">
-                                <h3 className={`text-center text-uppercase`}>Stats by weapon</h3>
-                                <div className={`row mb-4`}>
-                                    <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weapons} property={'kos'}/>}
-
-                                    </div>
-                                    <div className={`col-12 col-md-6`}>
-                                        {<WeaponChartComponent weapons={this.state.weapons} property={'damage'}/>}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {matchDom}
-            </div>;
-        } else if(this.state.loadedMatches){
-            dom = <div>
-                {statDom}
-                {matchDom}
-            </div>
-        }
-        */
         dom = <div>
             {statDom}
             <Modal show={this.state.showHistoryModal} onHide={() => this.setState({showHistoryModal: false})} dialogClassName="modal-90w">
