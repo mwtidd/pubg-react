@@ -615,10 +615,6 @@ class PlayerContainer extends Component {
         telemetryData.humanAttackEvents.forEach(attackEvent => {
             if ( victims.indexOf(attackEvent.victim.name) === -1 ) {
                 victims.push(attackEvent.victim.name);
-                /**
-                this.attackCount ++;
-                this.ka = this.killCount / this.attackCount;
-                **/
             }
 
             // update weapons
@@ -694,85 +690,6 @@ class PlayerContainer extends Component {
             damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)]++;
         });
 
-        /**
-
-
-
-        // todo: maybe support bot events
-
-
-        // todo: maybe support bot events
-        telemetryData.humanKillEvents.forEach(event => {
-
-            // update weapons
-            const damageCauser = weaponNameMap[event.damageCauserName];
-
-            if(damageCauser === undefined){
-                alert(event.damageCauserName);
-            }
-
-            if (damageCausers.indexOf(damageCauser) === -1) {
-                damageCausers.push(damageCauser);
-
-                damageCauserCounts[damageCausers.indexOf(damageCauser)] = 0;
-            }
-
-            damageCauserCounts[damageCausers.indexOf(damageCauser)]++;
-
-            // update weapon types
-            const damageCauserType = weaponTypeMap[event.damageCauserName];
-
-            if (damageCauserTypes.indexOf(damageCauserType) === -1) {
-                damageCauserTypes.push(damageCauserType);
-
-                damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)] = 0;
-            }
-
-            damageCauserTypeCounts[damageCauserTypes.indexOf(damageCauserType)]++;
-
-            // this.killCount ++;
-            // this.kd = this.killCount / this.deathCount;
-            // this.ka = this.killCount / this.attackCount;
-
-
-        });
-        **/
-
-        telemetryData.deathEvents.forEach(event => {
-            /**
-            this.deathCount ++;
-            this.kd = this.killCount / this.deathCount;
-             **/
-        });
-
-        /**
-        this.state.loadedAdvancedMatchCount++;
-        // console.log('loaded advanced data for ' + this.state.loadedAdvancedMatchCount + ' matches of ' + this.state.matches.length );
-
-        if(this.state.loadedAdvancedMatchCount === this.state.matches.length){
-            this.setState({weapons: weapons, weaponTypes: weaponTypes, loadedAdvancedMatchCount: this.state.loadedAdvancedMatchCount});
-            console.log('the weapon data is loaded');
-
-
-            const teammateMap = {};
-            this.state.teammates.forEach(teammate => {
-                if(teammateMap[teammate.name] === undefined){
-                    teammateMap[teammate.name] = 1;
-                } else {
-                    teammateMap[teammate.name]++;
-                }
-            });
-
-            let teammateCounts = Object.keys(teammateMap).map(teammate => {return {name: teammate, count: teammateMap[teammate]}});
-            teammateCounts = teammateCounts.sort((a,b) => {return b.count - a.count});
-            console.log(teammateCounts);
-
-
-
-        } else {
-            // console.log('updated advanced metrics');
-        }
-        **/
         return {
             damageCausers: damageCausers,
             damageCauserAmounts: damageCauserAmounts,
