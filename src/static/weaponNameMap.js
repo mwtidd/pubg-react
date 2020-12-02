@@ -10,6 +10,10 @@ export const weaponNameMap = {
     "BlackZoneController_Def_C": "Blackzone",
     "Boat_PG117_C": "PG-117",
     "BP_BRDM_C": "BRDM-2",
+    "BP_DO_Circle_Train_Merged_C": "Train",
+    "BP_DO_Line_Train_Dino_Merged_C": "Train",
+    "BP_DO_Line_Train_Merged_C": "Train",
+    "BP_FireEffectController_C": "Molotov Fire",
     "BP_M_Rony_A_01_C": "Rony",
     "BP_M_Rony_A_02_C": "Rony",
     "BP_M_Rony_A_03_C": "Rony",
@@ -73,9 +77,11 @@ export const weaponNameMap = {
     "PlayerFemale_A_C": "Player",
     "PlayerMale_A_C": "Player",
     "ProjGrenade_C": "Frag Grenade",
+    "WeapGrenade_C_81": "Frag Grenade",
     "ProjMolotov_C": "Molotov Cocktail",
     "ProjMolotov_DamageField_Direct_C": "Molotov Cocktail Fire Field",
     "ProjStickyGrenade_C": "Sticky Bomb",
+    "PanzerFaust100M_Projectile_C": "Panzer",
     "RedZoneBomb_C": "Redzone",
     "TslDestructibleSurfaceManager": "Destructible Surface",
     "Uaz_A_01_C": "UAZ (open top)",
@@ -112,6 +118,7 @@ export const weaponNameMap = {
     "WeapMk14_C": "Mk14 EBR",
     "WeapMk47Mutant_C": "Mk47 Mutant",
     "WeapMP5K_C": "MP5K",
+    "WeapMosinNagant_C": "Mosin-Nagant",
     "WeapNagantM1895_C": "R1895",
     "WeapPan_C": "Pan",
     "WeapPanProjectile_C": "Pan Projectile",
@@ -131,5 +138,10 @@ export const weaponNameMap = {
     "WeapVSS_C": "VSS",
     "Weapvz61Skorpion_C": "Skorpion",
     "WeapWin94_C": "Win94",
-    "WeapWinchester_C": "S1897"
+    "WeapWinchester_C": "S1897",
+    "BP_Niva_06_C": "Unknown"
 };
+
+export default{
+    weaponNameMap
+}

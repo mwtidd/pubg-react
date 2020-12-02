@@ -1,69 +1,147 @@
-import {GET_MATCH_FAILURE, GET_MATCH_PENDING, GET_MATCHES_SUCCESS, GET_RESULTS_SUCCESS} from "./types";
+import {GET_MATCH_FAILURE, GET_MATCHES_SUCCESS, GET_RESULTS_SUCCESS} from "./types";
 import axios from 'axios';
 
-const apiUrl = 'http://localhost:3000/xbox/na';
+const API_URL = process.env.REACT_APP_API_URL;
+
+const apiUrl = `${API_URL}/xbox/na`;
 
 const matches = new Map();
-const fetchedMatchIds = [];
-const fetchedMatches = [];
-const players = [];
+let fetchedMatchIds = [];
+// let fetchedMatches = [];
+let fetchedMatchDetails = [];
+// const players = [];
 
-export const getMatch = (matchId) => {
+export const getMatches = (matchIds) => {
     return (dispatch) => {
-        // dispatch(getMatchPending());
-        /**
-        if(fetchedMatchIds.length === 0 && fetchedMatches.length === 0){
-            if(window.localStorage.getItem('storedMatches')){
-                fetchedMatches = JSON.parse(window.localStorage.getItem('storedMatches'));
-                console.log(`retrieved ${fetchedMatches.length} from local storage`);
-                fetchedMatchIds = fetchedMatches.map(match => match.data.id);
+        matchIds.forEach(async (matchId) => {
+            try {
+                const data = await fetchMatch(matchId);
+
+                if(data){
+                    dispatch(getResultsSuccess(data.results));
+                    dispatch(getMatchesSuccess(data.details));
+                }
+            } catch (e) {
+                console.error(e);
+                dispatch(getMatchFailure(e));
             }
-        }
-         **/
-        matches.set(matchId, null);
-
-        if (fetchedMatchIds.indexOf(matchId) === -1) {
-            fetchedMatchIds.push(matchId);
-
-            axios.get(`${apiUrl}/matches/${matchId}`)
-                .then(mRes => {
-
-                    let match = mRes.data;
-
-                    // window.localStorage.setItem('storedMatches', JSON.stringify(fetchedMatches));
-                    let matchTime = new Date(match.data.attributes.createdAt);
-                    if(matchesMapFilter(match.data.attributes.mapName) && matchesDateFilter(matchTime) && matchesTypeFilter(mRes.data.data.attributes.gameMode)){
-
-                        let telemetryUrl = match['included'].filter(item => item.type === 'asset' && item.attributes.name === 'telemetry')[0].attributes.url;
-
-                        axios.get(telemetryUrl).then(tRes => {
-                            let telemetryData = parseTelemetryData(tRes);
-                            match.telemetryData = telemetryData;
-
-                            matches.set(matchId, match);
-                            fetchedMatches.push(match);
-
-
-                            if(isLoadingComplete()) {
-                                // console.log(fetchedMatches);
-                                const results = getResults();
-                                dispatch(getResultsSuccess(results));
-                                dispatch(getMatchesSuccess(fetchedMatches));
-                            }
-
-                        });
-
-                    } else {
-                        matches.delete(matchId);
-                    }
-                }).catch(err => {
-                dispatch(getMatchFailure(err));
-            })
-        }
-
+        });
     }
 }
 
+const fetchMatch = async (matchId) => {
+    // dispatch(getMatchPending());
+    matches.set(matchId, null);
+
+    if (fetchedMatchIds.indexOf(matchId) === -1) {
+        fetchedMatchIds.push(matchId);
+
+        const reqUrl = `${apiUrl}/matches/${matchId}`;
+
+        const mRes = await axios.get(reqUrl);
+
+        let match = mRes.data;
+
+        const results = getResults();
+
+        // let matchTime = new Date(match.attributes.createdAt);
+
+        // only pull ranked matches
+        if( !matchesTypeFilter(match.attributes.matchType)){
+            matches.delete(matchId);
+            return {results: results, details: fetchedMatchDetails};
+        }
+
+        /**
+         fetchedMatches.push(match);
+
+         matches.set(matchId, match);
+
+         fetchedMatchDetails.push(match);
+
+         console.log('get match');
+
+         if(isLoadingComplete()) {
+
+                        console.log('loading is complete');
+
+
+                        // console.log(fetchedMatches);
+                        const results = getResults();
+                        dispatch(getResultsSuccess(results));
+                        dispatch(getMatchesSuccess(fetchedMatchDetails));
+                    }
+         **/
+        matches.set(matchId, match);
+
+
+
+
+        if (false) {
+            // if(matchesMapFilter(match.attributes.mapName) && matchesDateFilter(matchTime) && matchesModeFilter(match.attributes.gameMode) && matchesTypeFilter(match.attributes.matchType)){
+
+            // let telemetryUrl = match['included'].filter(item => item.type === 'asset' && item.attributes.name === 'telemetry')[0].attributes.url;
+            let telemetryUrl = match.relationships.assets[0].attributes.URL;
+
+            const tRes = await axios.get(telemetryUrl);
+
+
+            let telemetryData = parseTelemetryData(tRes);
+            match.telemetryData = telemetryData;
+
+            matches.set(matchId, match);
+
+            fetchedMatchDetails.push(match);
+
+            return {results: results, details: fetchedMatchDetails};
+
+            /**
+
+             if(isLoadingComplete()) {
+
+
+                                // console.log(fetchedMatches);
+                                return {results: results, details: fetchedMatchDetails};
+                            }
+
+             **/
+
+        } else {
+            fetchedMatchDetails.push(match);
+
+            return {results: results, details: fetchedMatchDetails};
+
+            /**
+
+             if(isLoadingComplete()) {
+
+                             // console.log(fetchedMatches);
+
+                             return {results: results, details: fetchedMatchDetails};
+                         }
+             **/
+        }
+    }
+}
+
+export const getMatch = (matchId) => {
+    return async (dispatch) => {
+        try {
+            const data = await fetchMatch(matchId);
+
+            if(data){
+                dispatch(getResultsSuccess(data.results));
+                dispatch(getMatchesSuccess(data.details));
+            }
+
+        } catch (e) {
+            console.error(e);
+            dispatch(getMatchFailure(e));
+        }
+    }
+}
+
+/**
 function isLoadingComplete() {
 
     for (let matchId of matches.keys()) {
@@ -73,17 +151,27 @@ function isLoadingComplete() {
     }
     return true;
 }
+ **/
+
+function getParticipants(match){
+    let participants = [];
+    match.relationships.rosters.forEach(roster => {
+        participants = participants.concat(roster.relationships.participants);
+    });
+    return participants;
+}
 
 function getResults() {
     // player account id to match count map
     const matchCountMap = new Map();
-    fetchedMatches.forEach(match => {
+    fetchedMatchDetails.forEach(match => {
 
-        const participants = match.included.filter(item => item.type === 'participant');
+        const participants = getParticipants(match);
+        // const participants = match.included.filter(item => item.type === 'participant');
 
         participants.forEach(player => {
             const playerAccountId = player.attributes.stats.playerId;
-            const playerMatchId = player.id;
+            // const playerMatchId = player.id;
 
             if (matchCountMap.get(playerAccountId) === undefined) {
                 matchCountMap.set(playerAccountId, 1);
@@ -95,7 +183,7 @@ function getResults() {
 
     // look for players that player in every match
     for(let playerId of matchCountMap.keys()) {
-        if(matchCountMap.get(playerId) < fetchedMatches.length){
+        if(matchCountMap.get(playerId) < fetchedMatchDetails.length){
             matchCountMap.delete(playerId);
         }
     }
@@ -105,7 +193,7 @@ function getResults() {
 
     // player account id to player name map
     const playerNameMap = new Map();
-    fetchedMatches.forEach(match => {
+    fetchedMatchDetails.forEach(match => {
 
 
         // player match id to player account id map
@@ -114,7 +202,8 @@ function getResults() {
         const playerKnockMap = new Map();
         const playerDamageMap = new Map();
 
-        const participants = match.included.filter(item => item.type === 'participant');
+        const participants = getParticipants(match);
+        // const participants = match.included.filter(item => item.type === 'participant');
 
         participants.forEach(player => {
             const playerAccountId = player.attributes.stats.playerId;
@@ -129,7 +218,8 @@ function getResults() {
             playerNameMap.set(playerAccountId, playerName);
         });
 
-        const teams = match.included.filter(item => !item.type);
+        const teams = match.relationships.rosters;
+        // const teams = match.included.filter(item => !item.type);
         // const rosters = match.data.relationships.rosters.data;
         teams.forEach(team => {
             // get the player by their player match id
@@ -207,7 +297,7 @@ function getResults() {
     let results = [];
     for(let teamName of teamMap.keys()) {
         const matches = teamMap.get(teamName).matches;
-        if (matches.length < fetchedMatches.length) {
+        if (matches.length < fetchedMatchDetails.length) {
             teamMap.delete(teamName);
         } else {
             let points = 0;
@@ -250,6 +340,7 @@ function getResults() {
 
 }
 
+/**
 // Returns a function, that, as long as it continues to be invoked, will not
 // be triggered. The function will be called after it stops being called for
 // N milliseconds. If `immediate` is passed, trigger the function on the
@@ -268,73 +359,23 @@ function debounce(func, wait, immediate) {
         if (callNow) func.apply(context, args);
     };
 };
-
+ **/
 
 function parseTelemetryData(r) {
     const telemetryData = {
         stateEvents: [],
         killEvents: [],
         knockEvents: [],
-        attackEvents: []
+        // attackEvents: []
     };
 
     telemetryData.killEvents = r.data.filter( telemetryEvent => telemetryEvent['_T'] === 'LogPlayerKill' );
 
     telemetryData.knockEvents = r.data.filter( telemetryEvent => telemetryEvent['_T'] === 'LogPlayerMakeGroggy' );
 
-    telemetryData.attackEvents = r.data.filter( telemetryEvent => telemetryEvent['_T'] === 'LogPlayerTakeDamage' );
+    // telemetryData.attackEvents = r.data.filter( telemetryEvent => telemetryEvent['_T'] === 'LogPlayerTakeDamage' );
 
     telemetryData.stateEvents = r.data.filter( telemetryEvent => telemetryEvent['_T'] === 'LogGameStatePeriodic' );
-
-    /**
-    r.data.forEach(telemetryEvent => {
-        if (!telemetryEvent) {
-            // this should never happen
-            return;
-        }
-
-        // parse kill and death event
-        if (telemetryEvent['_T'] === 'LogPlayerKill') {
-            if (telemetryEvent['killer'] && telemetryEvent['killer']['accountId'] === accountId) {
-                telemetryData.killEvents.push(telemetryEvent);
-            } else if (telemetryEvent['victim']['accountId'] === accountId) {
-                telemetryData.deathEvents.push(telemetryEvent);
-            }
-        }
-
-        // parse knock event
-        if (telemetryEvent['_T'] === 'LogPlayerMakeGroggy'){
-            if (telemetryEvent['attacker'] && telemetryEvent['attacker']['accountId'] === accountId) {
-                telemetryData.knockEvents.push(telemetryEvent);
-            } else if (telemetryEvent['victim']['accountId'] === accountId) {
-                // deathEvents.push(telemetryEvent);
-            }
-        }
-
-        // parse attack and attached events
-        if (telemetryEvent['_T'] === 'LogPlayerTakeDamage') {
-            if (telemetryEvent['attacker'] && telemetryEvent['attacker']['accountId'] === accountId) {
-                telemetryData.attackEvents.push(telemetryEvent);
-            } else if (telemetryEvent['victim']['accountId'] === accountId) {
-                telemetryData.playerEvents.push(telemetryEvent);
-            }
-        }
-
-        if (telemetryEvent['_T'] === 'LogPlayerAttack') {
-            if (telemetryEvent['attacker']['accountId'] === accountId) {
-                // attackEvents.push(telemetryEvent);
-            }
-        }
-
-        // log circle event
-        if (telemetryEvent['_T'] === 'LogGameStatePeriodic') {
-            const safeZone = {'safeZone':
-                    {'position': telemetryEvent['gameState']['safetyZonePosition'],
-                        'radius':  telemetryEvent['gameState']['safetyZoneRadius']}};
-            telemetryData.stateEvents.push(safeZone);
-        }
-    });
-    **/
 
     return telemetryData;
 }
@@ -347,15 +388,22 @@ function getKillPoints(){
     return Number.parseInt(getRequestParam('killPoints'))
 }
 
+function matchesTypeFilter(type){
+    return type === 'competitive';
+}
+
+/**
 function matchesMapFilter(map){
     return map !== 'Range_Main';
 }
 
-function matchesTypeFilter(type){
+
+
+function matchesModeFilter(mode){
     let matchView = getRequestParam('matchView') === '1';
     if(matchView) return true;
 
-    if (type === 'tdm') return false;
+    if (mode === 'tdm') return false;
     // else if (type.indexOf('fpp') > -1) return false;
 
     return true; // type === 'squad';// ; //type === 'duo';//
@@ -385,16 +433,18 @@ function matchesDateFilter(date){
 
     return date > pastDate;
 }
+ **/
 
 function getRequestParam(name){
-    if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(window.location.search))
+    if(name =(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(window.location.search))
         return decodeURIComponent(name[1]);
 }
 
-
+/**
 const getMatchPending = () => ({
     type: GET_MATCH_PENDING
 });
+**/
 
 const getMatchesSuccess = matches => ({
     type: GET_MATCHES_SUCCESS,

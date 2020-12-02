@@ -8,6 +8,7 @@ const MatchListComponent = ({ matches }) => {
         <div className={`col-1`}>mode</div>
         <div className={`col-2`}>map</div>
         <div className={`col-1`}>kills</div>
+        <div className={`col-1`}>kos</div>
         <div className={`col-1`}>dmg</div>
         <div className={`col-1`}>revs</div>
         <div className={`col-1`}>place</div>
@@ -18,7 +19,8 @@ const MatchListComponent = ({ matches }) => {
               <div className={`col-2`}>{match.date.toLocaleDateString().replace('/2020','')} {match.date.toLocaleTimeString([], {timeStyle: 'short'}).replace(' ', '').toLowerCase().replace('m','')}</div>
               <div className={`col-1`}>{match.gameMode}</div>
               <div className={`col-2`}>{match.mapName}</div>
-              <div className={`col-1`}>{match.kills}</div>
+              <div className={`col-1`}>{match.humanKills} | {match.botKills}</div>
+              <div className={`col-1`}>{match.humanKnocks} | {match.botKnocks}</div>
               <div className={`col-1`}>{match.damageDealt}</div>
               <div className={`col-1`}>{match.revives}</div>
               <div className={`col-1`}>{match.winPlace}</div>

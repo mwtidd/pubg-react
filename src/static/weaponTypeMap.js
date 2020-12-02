@@ -10,6 +10,10 @@ export const weaponTypeMap = {
     "BlackZoneController_Def_C": "Blackzone",
     'Boat_PG117_C': 'Vehicle',
     'BP_BRDM_C': 'Vehicle',
+    "BP_DO_Circle_Train_Merged_C": "Vehicle",
+    "BP_DO_Line_Train_Dino_Merged_C": "Vehicle",
+    "BP_DO_Line_Train_Merged_C": "Vehicle",
+    "BP_FireEffectController_C": "Throwable",
     'BP_M_Rony_A_01_C': 'Vehicle',
     'BP_M_Rony_A_02_C': 'Vehicle',
     'BP_M_Rony_A_03_C': 'Vehicle',
@@ -73,9 +77,11 @@ export const weaponTypeMap = {
     'PlayerFemale_A_C': 'Player',
     'PlayerMale_A_C': 'Player',
     'ProjGrenade_C': 'Throwable',
+    "WeapGrenade_C_81": "Throwable",
     'ProjMolotov_C': 'Throwable',
     'ProjMolotov_DamageField_Direct_C': 'Throwable',
     "ProjStickyGrenade_C": "Throwable",
+    "PanzerFaust100M_Projectile_C": "Throwable",
     'RedZoneBomb_C': 'Redzone',
     "TslDestructibleSurfaceManager": "Building",
     'Uaz_A_01_C': 'Vehicle',
@@ -112,6 +118,7 @@ export const weaponTypeMap = {
     'WeapMk14_C': 'DMR',
     'WeapMk47Mutant_C': 'AR (Burst)',
     'WeapMP5K_C': 'SMG',
+    "WeapMosinNagant_C": "Sniper",
     'WeapNagantM1895_C': 'Pistol',
     'WeapPan_C': 'Melee',
     'WeapPanProjectile_C': 'Melee Throw',
@@ -131,5 +138,10 @@ export const weaponTypeMap = {
     'WeapVSS_C': 'DMR',
     'Weapvz61Skorpion_C': 'Pistol',
     'WeapWin94_C': 'Sniper',
-    'WeapWinchester_C': 'Shotgun'
+    'WeapWinchester_C': 'Shotgun',
+    "BP_Niva_06_C": "Unknown"
 };
+
+export default {
+    weaponTypeMap
+}

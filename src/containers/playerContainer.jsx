@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import {mapMap} from "../static/mapMap";
-import MatchListComponent from "../components/matchListComponent";
 import {getMatch} from "../actions";
 import {connect} from "react-redux";
 import {weaponNameMap} from "../static/weaponNameMap";
@@ -13,14 +12,16 @@ import Modal from "react-bootstrap/Modal";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import PlayerHistoryContainer from "./playerHistoryContainer";
+import PlayerMatchListContainer from "./playerMatchListContainer";
 
+const API_URL = process.env.REACT_APP_API_URL;
 
 class PlayerContainer extends Component {
 
     serviceUrl = '';
     state = { player: null, rank: null, loaded: true, offenseScore: 0, matchIds: [], teammates: [], matchCount: 0, timeSurvived: 0,
         topCount: 0, loadedMatchCount:0, loadedAdvancedMatchCount: 0, weapons: [], weaponTypes: [],
-        loadedMatches: false, matchList: [], loadedMatchIds: [], showHistoryModal: false};
+        loadedMatches: false, matchList: [], loadedMatchIds: [], showHistoryModal: false, showMatchListModal: false, showPlayerModal: false};
 
     // damageCausers = [];
     // damageCauserAmounts = [];
@@ -62,21 +63,23 @@ class PlayerContainer extends Component {
     }
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
+        /**
         console.log('----');
         console.log('update component');
         console.log('props');
         console.log(nextProps);
         console.log('states');
         console.log(nextState);
+         **/
         return true;
     }
 
     getData() {
         if(!this.props.username) return;
 
-        this.serviceUrl = 'http://localhost:3000/' + this.props.platform + '/' + this.props.region;
-        const reqUrl = this.serviceUrl + '/players/' + encodeURIComponent(this.props.username) + '/ranked';
-        console.log(`get player ${reqUrl}`);
+        this.serviceUrl = `${API_URL}/${this.props.platform}/${this.props.region}`;
+        const reqUrl = `${this.serviceUrl}/players/${encodeURIComponent(this.props.username)}/ranked`;
+        // console.log(`get player ${reqUrl}`);
 
         axios.get(reqUrl)
             .then(res => this.initPlayer(res.data))
@@ -85,19 +88,21 @@ class PlayerContainer extends Component {
 
     initPlayer(data){
         if(data){
-            console.log('loaded player');
-            console.log(data);
+            // console.log('loaded player');
+            // console.log(data);
             let player = data.relationships.player;
             let rankedSeason = data.attributes.rankedGameModeStats.squad;
-            let matches = [];//player.relationships.matches;
+            // let matches = [];//player.relationships.matches;
 
             // alert(`${this.props.username} ${rankedSeason.currentTier} ${rankedSeason.currentSubTier}`);
 
-            console.log('update player | rank | matchCount | matchIds');
+            // console.log('update player | rank | matchCount | matchIds');
 
             this.setState({player: player, rank: rankedSeason}); //, matchCount: matches.length, matchIds: matches.map(match => match.id)});
 
             // console.log(`match count is ${matches.length}`);
+            const matches = this.state.player.relationships.matches;
+
             if(matches) matches.forEach(match => {
                 // this.props.fetchMatch(match.id);
             });
@@ -106,10 +111,32 @@ class PlayerContainer extends Component {
         }
     }
 
+    initMatches(matches) {
+        // const matches = this.state.player.relationships.matches;
+
+        if(matches) matches.forEach(match => {
+            // this.props.fetchMatch(match.id);
+        });
+    }
+
     render() {
+        /**
+        if (this.state.showMatchListModal) {
+
+            this.serviceUrl = `${API_URL}/${this.props.platform}/${this.props.region}`;
+            const reqUrl = `${this.serviceUrl}/players/${encodeURIComponent(this.props.username)}/matches`;
+
+            axios.get(reqUrl)
+                .then(res => this.initMatches(res.data))
+                .catch(error => {console.error(error);});
+
+
+        }
+         **/
 
         // console.log('render');
 
+        /**
         let progressDom =  <div className={``}>
             <div className="progress">
                 <div className="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
@@ -119,31 +146,40 @@ class PlayerContainer extends Component {
                 loaded data for {this.state.loadedAdvancedMatchCount} of {this.state.matchCount} matches
             </div>
         </div>;
-
+        **/
 
         let showTotals = this.getRequestParam('totals') === '1';
         let statDom = <div className={`stats`}>
-            {(!showTotals) && <AverageDataRow username={this.props.username} rank={this.state.rank} state={this.state} onToggleHistoryModal={() => this.setState({showHistoryModal: !this.state.showHistoryModal})}/>}
+            {(!showTotals) && <AverageDataRow username={this.props.username} rank={this.state.rank} state={this.state} showDelete={!!this.props.onDelete}
+                                              onShowPlayerModal={() => this.setState({showPlayerModal: true})}
+                                              onShowMatchesModal={() => this.setState({showMatchListModal: true})}
+                                              onShowHistoryModal={() => this.setState({showHistoryModal: true})}
+                                              onDelete={() => {
+                                                  this.props.onDelete && this.props.onDelete()
+                                              }}
+            />}
             {(showTotals) && <TotalDataRow username={this.props.username} rank={this.state.rank} state={this.state}/>}
         </div>;
-
-
-        let matchDom = <div className={`matches mb-4`}>
-            <MatchListComponent matches={this.state.matchList}/>
-        </div>;
-
-        let showMatches = this.getRequestParam('matches') === '1';
-        if(!showMatches){
-            matchDom = <div></div>;
-        }
 
         let dom = <div></div>; // progressDom;
 
 
-        let showCharts= this.getRequestParam('charts') === '1';
+        // let showCharts= this.getRequestParam('charts') === '1';
         dom = <div>
             {statDom}
-            <Modal show={this.state.showHistoryModal} onHide={() => this.setState({showHistoryModal: false})} dialogClassName="modal-90w">
+            <Modal show={this.state.showPlayerModal} onHide={() => this.setState({showPlayerModal: false})} size={`lg`}>
+                <Modal.Header closeButton></Modal.Header>
+                <Modal.Body>
+                    players
+                </Modal.Body>
+            </Modal>
+            <Modal show={this.state.showMatchListModal} onHide={() => this.setState({showMatchListModal: false})} size={`lg`}>
+                <Modal.Header closeButton></Modal.Header>
+                <Modal.Body>
+                    <PlayerMatchListContainer platform={this.props.platform} region={this.props.region} username={this.props.username}/>
+                </Modal.Body>
+            </Modal>
+            <Modal show={this.state.showHistoryModal} onHide={() => this.setState({showHistoryModal: false})} size={`lg`}>
                 <Modal.Header closeButton>Ranked History</Modal.Header>
                 <Modal.Body>
                     <PlayerHistoryContainer platform={this.props.platform} region={this.props.region} username={this.props.username}/>
@@ -177,7 +213,7 @@ class PlayerContainer extends Component {
 
 
     getRequestParam(name){
-        if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(window.location.search))
+        if(name =(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(window.location.search))
             return decodeURIComponent(name[1]);
     }
 
@@ -393,11 +429,11 @@ class PlayerContainer extends Component {
 
         let uniqueHumanKnocks = [];
         let uniqueBotKnocks = [];
-        let knockedVictims = knockEvents.map(event => event.victim.accountId);
+        // let knockedVictims = knockEvents.map(event => event.victim.accountId);
         const knockedBots = []; //knockedVictims.filter(id => id.indexOf('ai.') === 0);
         const knockedHumans = []; //knockedVictims.filter(id => id.indexOf('ai.') === -1);
-        const botKnocks = knockEvents.filter(event => this.isBot(event.victim.accountId));
-        const humanKnocks = knockEvents.filter(event => !this.isBot(event.victim.accountId));
+        // const botKnocks = knockEvents.filter(event => this.isBot(event.victim.accountId));
+        // const humanKnocks = knockEvents.filter(event => !this.isBot(event.victim.accountId));
         knockEvents.forEach(event => {
             const victimId = event.victim.accountId;
             if(victimId.indexOf('ai.') === 0){
@@ -435,8 +471,8 @@ class PlayerContainer extends Component {
             }
         });
 
-        let bots = uniqueBotVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === 0);
-        let humans = uniqueHumanVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === -1);
+        // let bots = uniqueBotVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === 0);
+        // let humans = uniqueHumanVictims; //uniqueHumanVictims.filter(victimId => victimId.indexOf('ai.') === -1);
 
         // console.log(`bots: ${bots.length} humans: ${humans.length}`);
 
@@ -468,7 +504,7 @@ class PlayerContainer extends Component {
     parseTelemetryData(r) {
         const playerEvents = [];
         const stateEvents = [];
-        const positionEvents = [];
+        // const positionEvents = [];
         const killEvents = [];
         const knockEvents = [];
         const deathEvents = [];
@@ -476,7 +512,7 @@ class PlayerContainer extends Component {
 
         const accountId = this.state.player.id;
 
-        let dropTime = null;
+        // let dropTime = null;
 
         const playerTeamId = r.data.filter(event => {
             if (event['character'] && event['character']['accountId'] === accountId && event['_T'] === 'LogPlayerCreate') {
@@ -705,7 +741,8 @@ class PlayerContainer extends Component {
 PlayerContainer.propTypes = {
     platform: PropTypes.string,
     region: PropTypes.string,
-    username: PropTypes.string
+    username: PropTypes.string,
+    onDelete: PropTypes.func
 }
 
 const mapStateToProps = state => {
